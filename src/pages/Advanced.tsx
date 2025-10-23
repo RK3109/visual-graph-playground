@@ -259,28 +259,34 @@ export default function Advanced() {
               <Card className="p-6 border-2 border-primary/30 shadow-card overflow-y-auto max-h-[600px]">
                 <h2 className="text-2xl font-bold mb-4 text-purple-400">Analysis Results</h2>
 
-                {results.articulationPoints && results.articulationPoints.length > 0 && (
+                {results.articulationPoints !== undefined && (
                   <div className="mb-6">
                     <h3 className="text-lg font-semibold text-yellow-400 mb-2">
                       Articulation Points & Bridges
                     </h3>
-                    <p className="text-sm text-foreground mb-2">
-                      Articulation Points: {results.articulationPoints.join(", ") || "None"}
-                    </p>
-                    {results.bridges && results.bridges.length > 0 && (
-                      <p className="text-sm text-foreground mb-3">
-                        Bridges: {results.bridges.map((b: [number, number]) => `(${b[0]}, ${b[1]})`).join(", ")}
+                    {results.articulationPoints.length > 0 ? (
+                      <>
+                        <p className="text-sm text-foreground mb-2">
+                          Articulation Points: {results.articulationPoints.join(", ")}
+                        </p>
+                        {results.bridges && results.bridges.length > 0 && (
+                          <p className="text-sm text-foreground mb-3">
+                            Bridges: {results.bridges.map((b: [number, number]) => `(${b[0]}, ${b[1]})`).join(", ")}
+                          </p>
+                        )}
+                        <Button
+                          onClick={handleShowAfterRemoval}
+                          variant="outline"
+                          size="sm"
+                          className="mt-2"
+                        >
+                          Show Graph After Removal
+                        </Button>
+                      </>
+                    ) : (
+                      <p className="text-sm text-foreground">
+                        No articulation points or bridges found. The graph is biconnected.
                       </p>
-                    )}
-                    {results.articulationPoints.length > 0 && (
-                      <Button
-                        onClick={handleShowAfterRemoval}
-                        variant="outline"
-                        size="sm"
-                        className="mt-2"
-                      >
-                        Show Graph After Removal
-                      </Button>
                     )}
                   </div>
                 )}
@@ -317,17 +323,30 @@ export default function Advanced() {
                   </div>
                 )}
 
-                {results.maxFlow && (
+                {results.maxFlow !== undefined && (
                   <div className="mb-6">
                     <h3 className="text-lg font-semibold text-yellow-400 mb-2">
                       Maximum Flow
                     </h3>
-                    <p className="text-2xl font-bold text-primary mb-2">
-                      {results.maxFlow.value}
-                    </p>
-                    <p className="text-sm text-foreground">
-                      From node {results.maxFlow.source} to node {results.maxFlow.sink}
-                    </p>
+                    {results.maxFlow.value > 0 ? (
+                      <>
+                        <p className="text-2xl font-bold text-primary mb-2">
+                          {results.maxFlow.value}
+                        </p>
+                        <p className="text-sm text-foreground">
+                          From node {results.maxFlow.source} to node {results.maxFlow.sink}
+                        </p>
+                      </>
+                    ) : (
+                      <>
+                        <p className="text-xl font-bold text-foreground mb-2">
+                          0
+                        </p>
+                        <p className="text-sm text-foreground">
+                          No flow exists from node {results.maxFlow.source} to node {results.maxFlow.sink}
+                        </p>
+                      </>
+                    )}
                   </div>
                 )}
               </Card>
