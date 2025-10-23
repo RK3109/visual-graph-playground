@@ -5,6 +5,7 @@ interface GraphCanvasProps {
   graph: GraphData;
   highlightedNodes?: Set<number>;
   componentColors?: Map<number, number>;
+  articulationPoints?: number[];
   className?: string;
 }
 
@@ -16,7 +17,7 @@ const COMPONENT_COLORS = [
   "hsl(150 70% 50%)",  // green
 ];
 
-export function GraphCanvas({ graph, highlightedNodes, componentColors, className }: GraphCanvasProps) {
+export function GraphCanvas({ graph, highlightedNodes, componentColors, articulationPoints, className }: GraphCanvasProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
   useEffect(() => {
@@ -100,12 +101,15 @@ export function GraphCanvas({ graph, highlightedNodes, componentColors, classNam
 
       const isHighlighted = highlightedNodes?.has(node);
       const componentColor = componentColors?.get(node);
+      const isArticulationPoint = articulationPoints?.includes(node);
 
       // Node circle
       ctx.beginPath();
       ctx.arc(pos.x, pos.y, 25, 0, 2 * Math.PI);
       
-      if (isHighlighted) {
+      if (isArticulationPoint) {
+        ctx.fillStyle = "hsl(0 100% 50%)"; // Red for articulation points
+      } else if (isHighlighted) {
         ctx.fillStyle = componentColor !== undefined
           ? COMPONENT_COLORS[componentColor % COMPONENT_COLORS.length]
           : "hsl(187 100% 50%)";
@@ -115,31 +119,38 @@ export function GraphCanvas({ graph, highlightedNodes, componentColors, classNam
       ctx.fill();
 
       // Node border with glow effect
-      ctx.strokeStyle = isHighlighted 
-        ? (componentColor !== undefined
-            ? COMPONENT_COLORS[componentColor % COMPONENT_COLORS.length]
-            : "hsl(187 100% 50%)")
-        : "hsl(187 100% 50%)";
-      ctx.lineWidth = isHighlighted ? 3 : 2;
-      
-      if (isHighlighted) {
+      if (isArticulationPoint) {
+        ctx.strokeStyle = "hsl(0 100% 50%)";
+        ctx.lineWidth = 3;
         ctx.shadowBlur = 20;
-        ctx.shadowColor = componentColor !== undefined
-          ? COMPONENT_COLORS[componentColor % COMPONENT_COLORS.length]
+        ctx.shadowColor = "hsl(0 100% 50%)";
+      } else {
+        ctx.strokeStyle = isHighlighted 
+          ? (componentColor !== undefined
+              ? COMPONENT_COLORS[componentColor % COMPONENT_COLORS.length]
+              : "hsl(187 100% 50%)")
           : "hsl(187 100% 50%)";
+        ctx.lineWidth = isHighlighted ? 3 : 2;
+        
+        if (isHighlighted) {
+          ctx.shadowBlur = 20;
+          ctx.shadowColor = componentColor !== undefined
+            ? COMPONENT_COLORS[componentColor % COMPONENT_COLORS.length]
+            : "hsl(187 100% 50%)";
+        }
       }
       
       ctx.stroke();
       ctx.shadowBlur = 0;
 
       // Node label
-      ctx.fillStyle = isHighlighted ? "hsl(215 25% 6%)" : "hsl(215 25% 6%)";
+      ctx.fillStyle = (isHighlighted || isArticulationPoint) ? "hsl(0 0% 100%)" : "hsl(215 25% 6%)";
       ctx.font = "bold 16px sans-serif";
       ctx.textAlign = "center";
       ctx.textBaseline = "middle";
       ctx.fillText(node.toString(), pos.x, pos.y);
     });
-  }, [graph, highlightedNodes, componentColors]);
+  }, [graph, highlightedNodes, componentColors, articulationPoints]);
 
   return (
     <canvas

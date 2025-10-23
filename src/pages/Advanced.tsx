@@ -61,7 +61,7 @@ export default function Advanced() {
       newResults.stronglyConnectedComponents = components;
     }
 
-    if (selectedOptions.maxFlow && graph.isDirected) {
+    if (selectedOptions.maxFlow) {
       const source = parseInt(maxFlowSource);
       const sink = parseInt(maxFlowSink);
 
@@ -142,7 +142,11 @@ export default function Advanced() {
               Advanced Graph Analysis
             </h2>
             <div className="bg-secondary/50 rounded-lg p-4 border border-primary/20">
-              <GraphCanvas graph={displayGraph} className="w-full" />
+              <GraphCanvas 
+                graph={displayGraph} 
+                className="w-full"
+                articulationPoints={results.articulationPoints}
+              />
             </div>
             {showAfterRemoval && (
               <Button
@@ -214,7 +218,7 @@ export default function Advanced() {
                   </Label>
                 </div>
 
-                {selectedOptions.maxFlow && graph.isDirected && (
+                {selectedOptions.maxFlow && (
                   <div className="ml-6 space-y-3 mt-2">
                     <div>
                       <Label htmlFor="source" className="text-sm">Source Node</Label>

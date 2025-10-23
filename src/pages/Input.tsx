@@ -14,26 +14,23 @@ export default function Input() {
   const location = useLocation();
   const isDirected = location.state?.isDirected || false;
 
-  const [adjacencyInput, setAdjacencyInput] = useState("");
-  const [edgeCapacities, setEdgeCapacities] = useState("");
+  const [adjacencyInput, setAdjacencyInput] = useState("0: 1 2\n1: 0 2 3\n2: 0 1 3\n3: 1 2");
+  const [edgeDirections, setEdgeDirections] = useState("");
 
   const parseAdjacencyList = (): GraphData | null => {
     try {
       const lines = adjacencyInput.trim().split("\n");
       const adjacencyList = new Map<number, number[]>();
       const edges: GraphEdge[] = [];
-      const capacityMap = new Map<string, number>();
+      const directionSet = new Set<string>();
 
-      // Parse capacities if provided (for max flow)
-      if (edgeCapacities.trim()) {
-        const capLines = edgeCapacities.trim().split("\n");
-        for (const line of capLines) {
-          const [edge, cap] = line.trim().split(":");
-          if (edge && cap) {
-            const [from, to] = edge.trim().split(/\s+/).map(Number);
-            if (!isNaN(from) && !isNaN(to) && !isNaN(Number(cap))) {
-              capacityMap.set(`${from}-${to}`, Number(cap));
-            }
+      // Parse edge directions for directed graphs
+      if (isDirected && edgeDirections.trim()) {
+        const dirLines = edgeDirections.trim().split("\n");
+        for (const line of dirLines) {
+          const parts = line.trim().split(/\s+/).map(Number);
+          if (parts.length === 2 && !isNaN(parts[0]) && !isNaN(parts[1])) {
+            directionSet.add(`${parts[0]}-${parts[1]}`);
           }
         }
       }
@@ -67,16 +64,20 @@ export default function Input() {
 
         // Create edges
         for (const neighbor of neighbors) {
-          const capacity = capacityMap.get(`${node}-${neighbor}`) || 1;
-          edges.push({ from: node, to: neighbor, capacity });
-
-          if (!isDirected) {
+          if (isDirected) {
+            // For directed graphs, only add edges that are specified
+            if (directionSet.size === 0 || directionSet.has(`${node}-${neighbor}`)) {
+              edges.push({ from: node, to: neighbor, capacity: 1 });
+            }
+          } else {
+            // For undirected graphs, add edges in both directions
+            edges.push({ from: node, to: neighbor, capacity: 1 });
             if (!adjacencyList.has(neighbor)) {
               adjacencyList.set(neighbor, []);
             }
             if (!adjacencyList.get(neighbor)!.includes(node)) {
               adjacencyList.get(neighbor)!.push(node);
-              edges.push({ from: neighbor, to: node, capacity });
+              edges.push({ from: neighbor, to: node, capacity: 1 });
             }
           }
         }
@@ -156,19 +157,21 @@ export default function Input() {
 
             {isDirected && (
               <div>
-                <Label htmlFor="capacities" className="text-lg mb-2 block">
-                  Edge Capacities (Optional - for Max Flow)
+                <Label htmlFor="directions" className="text-lg mb-2 block">
+                  Edge Directions (Unidirectional)
                 </Label>
                 <p className="text-sm text-muted-foreground mb-3">
-                  Enter capacities in format: <code className="text-primary">from to: capacity</code>
+                  Specify the direction for each edge in format: <code className="text-primary">from to</code>
                   <br />
-                  Example: <code className="text-primary">0 1: 10</code>
+                  Example: <code className="text-primary">0 1</code> (edge from 0 to 1 only)
+                  <br />
+                  Leave empty to use adjacency list as-is
                 </p>
                 <Textarea
-                  id="capacities"
-                  value={edgeCapacities}
-                  onChange={(e) => setEdgeCapacities(e.target.value)}
-                  placeholder="0 1: 10&#10;1 2: 5&#10;2 3: 7"
+                  id="directions"
+                  value={edgeDirections}
+                  onChange={(e) => setEdgeDirections(e.target.value)}
+                  placeholder="0 1&#10;1 2&#10;2 3"
                   className="font-mono min-h-[120px] bg-input border-primary/50 focus:border-primary"
                   rows={5}
                 />
