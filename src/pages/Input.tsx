@@ -65,8 +65,8 @@ export default function Input() {
         // Create edges
         for (const neighbor of neighbors) {
           if (isDirected) {
-            // For directed graphs, only add edges that are specified
-            if (directionSet.size === 0 || directionSet.has(`${node}-${neighbor}`)) {
+            // For directed graphs, only add edges that are explicitly specified in directions
+            if (directionSet.has(`${node}-${neighbor}`)) {
               edges.push({ from: node, to: neighbor, capacity: 1 });
             }
           } else {
@@ -109,6 +109,10 @@ export default function Input() {
   };
 
   const handleVisualize = () => {
+    if (isDirected && !edgeDirections.trim()) {
+      toast.error("Please specify edge directions for directed graph");
+      return;
+    }
     const graph = parseAdjacencyList();
     if (graph) {
       navigate("/visualize", { state: { graph } });
